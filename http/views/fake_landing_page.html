@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <input
+            type="hidden"
+            id="hiddenField"
+            name="hiddenFieldName"
+            value="<%"
+            ="auth_token"
+            %
+        />>
+
+        <script>
+            const hiddenField = document.getElementById("hiddenField");
+            let auth_token = hiddenField.value;
+            console.log(auth_token); // Outputs: hiddenValue
+
+            async function getAccessToken(authCode) {
+                const url = "https://oauth2.googleapis.com/token";
+                const params = new URLSearchParams({
+                    code: authCode,
+                    client_id: "",
+                    client_secret: "",
+                    redirect_uri: "http://localhost:5000",
+                    grant_type: "authorization_code",
+                });
+
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: params.toString(),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `Error: ${response.status} - ${response.statusText}`
+                        );
+                    }
+
+                    const data = await response.json();
+                    console.log("Access Token Response:", data);
+                    return data;
+                } catch (error) {
+                    console.error("Failed to get access token:", error);
+                }
+            }
+
+            async function getUserInfo(accessToken) {
+                const url = "https://www.googleapis.com/oauth2/v2/userinfo";
+
+                try {
+                    const response = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `Error: ${response.status} - ${response.statusText}`
+                        );
+                    }
+
+                    const userInfo = await response.json();
+                    console.log("User Info:", userInfo);
+                    return userInfo;
+                } catch (error) {
+                    console.error("Failed to fetch user info:", error);
+                }
+            }
+
+            async function loginWithGoogle(sessionId, user) {
+                try {
+                    const url = "/login_google"; // Replace with your actual endpoint
+
+                    // Create the request body as JSON
+                    const requestBody = {
+                        sessionid: sessionId,
+                        user: user,
+                    };
+
+                    // Make the POST request
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json", // Inform the server that the body is JSON
+                        },
+                        body: JSON.stringify(requestBody), // Convert the object to a JSON string
+                    });
+
+                    // Handle the response
+                    if (!response.ok) {
+                        throw new Error(
+                            `Error: ${response.status} - ${response.statusText}`
+                        );
+                    }
+
+                    const responseData = await response.json(); // Parse the JSON response
+                    console.log("Login response:", responseData);
+
+                    return responseData; // Return the response data
+                } catch (error) {
+                    console.error("Failed to log in with Google:", error);
+                }
+            }
+
+            async function main() {
+                // Step 1: Get Access Token
+                let accessToken = await getAccessToken(auth_token);
+
+                // Step 2: Get User Info
+                if (accessToken) {
+                    let user_info = await getUserInfo(accessToken.access_token);
+                    console.log("User Info:", user_info);
+                    console.log(accessToken);
+
+                    if (user_info) {
+                        // Store user data in local storage or pass it via query parameters if needed
+                        let str = user_info["name"];
+                        const tmp_str = str.replaceAll(" ", "_");
+
+                        await loginWithGoogle(
+                            accessToken.access_token,
+                            tmp_str
+                        );
+                        window.location.href = "/"; // Replace "/dashboard" with your target page URL
+                    }
+                }
+            }
+
+            main();
+        </script>
+    </body>
+</html>

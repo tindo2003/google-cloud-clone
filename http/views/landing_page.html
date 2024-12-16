@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PennCloud</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            function openSignUpModal() {
+                const modal = document.getElementById("signup-modal");
+                modal.classList.remove("hidden", "opacity-0", "scale-95");
+                modal.classList.add("opacity-100", "scale-100");
+            }
+
+            function closeSignUpModal() {
+                const modal = document.getElementById("signup-modal");
+                modal.classList.add("opacity-0", "scale-95");
+                modal.classList.remove("opacity-100", "scale-100");
+
+                // Delay hiding the modal to allow animation to complete
+                setTimeout(() => {
+                    modal.classList.add("hidden");
+                }, 150); // Match duration in CSS
+            }
+        </script>
+    </head>
+    <body class="bg-gray-50 h-screen flex items-center justify-center">
+        <% if (logged_in) %>
+        <!-- Dashboard Layout -->
+        <div class="text-center p-6 bg-white rounded-lg shadow-lg">
+            <h1 class="text-2xl font-bold mb-2">PennCloud</h1>
+            <p class="text-gray-600 mb-8">Welcome, <%= username %>!</p>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="/email">
+                    <div
+                        class="bg-blue-100 p-4 rounded-lg flex flex-col items-center hover:bg-blue-200 cursor-pointer"
+                    >
+                        <img
+                            src="https://img.icons8.com/fluency/48/000000/email.png"
+                            alt="Webmail"
+                            class="w-12 h-12 mb-2"
+                        />
+                        <p class="text-blue-700 font-semibold">Webmail</p>
+                    </div>
+                </a>
+                <a href="/storage">
+                    <div
+                        class="bg-green-100 p-4 rounded-lg flex flex-col items-center hover:bg-green-200 cursor-pointer"
+                    >
+                        <img
+                            src="https://img.icons8.com/fluency/48/000000/database.png"
+                            alt="Storage"
+                            class="w-12 h-12 mb-2"
+                        />
+                        <p class="text-green-700 font-semibold">Storage</p>
+                    </div>
+                </a>
+                <a href="/admin">
+                    <div
+                        class="bg-yellow-100 p-4 rounded-lg flex flex-col items-center hover:bg-yellow-200 cursor-pointer col-span-2"
+                    >
+                        <img
+                            src="https://img.icons8.com/fluency/48/000000/maintenance.png"
+                            alt="Console"
+                            class="w-12 h-12 mb-2"
+                        />
+                        <p class="text-yellow-700 font-semibold">Console</p>
+                    </div>
+                </a>
+                <a href="/game">
+                    <div
+                        class="bg-violet-100 p-4 rounded-lg flex flex-col items-center hover:bg-violet-200 cursor-pointer col-span-2"
+                    >
+                        <img
+                            src="/assets/images/game.svg"
+                            alt="Game Icon"
+                            class="w-12 h-12 mb-2"
+                        />
+                        <p class="text-violet-700 font-semibold">Game</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="flex justify-between mt-8 space-x-4">
+                <button
+                    id="changePasswordBtn"
+                    class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded hover:bg-gray-300"
+                    onclick="openChangePasswordModal()"
+                >
+                    Change Password
+                </button>
+                <form action="/logout" method="POST">
+                    <button
+                        type="submit"
+                        class="bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-600"
+                    >
+                        Logout
+                    </button>
+                </form>
+            </div>
+
+            <div
+                id="changePasswordModal"
+                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+                onclick="closeModalOnOverlayClick(event)"
+            >
+                <div class="bg-white rounded-lg p-6 w-80">
+                    <h2 class="text-xl font-semibold mb-4">Change Password</h2>
+                    <form onsubmit="handleChangePasswordSubmit(event)">
+                        <!-- New Password Field -->
+                        <div class="mb-4">
+                            <label
+                                for="newPassword"
+                                class="block text-gray-700 mb-1"
+                                >New Password</label
+                            >
+                            <input
+                                type="password"
+                                id="change-pwd-newPassword"
+                                class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        <!-- Confirm Password Field -->
+                        <div class="mb-4">
+                            <label
+                                for="confirmPassword"
+                                class="block text-gray-700 mb-1"
+                                >Confirm Password</label
+                            >
+                            <input
+                                type="password"
+                                id="change-pwd-confirmPassword"
+                                class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onclick="closeChangePasswordModal()"
+                                class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <% else %>
+        <!-- Login Page Layout -->
+        <div
+            class="bg-white rounded-lg shadow-lg flex overflow-hidden w-full max-w-4xl"
+        >
+            <!-- Left: Form Section -->
+            <div class="w-1/2 p-8 lg:p-16">
+                <h2 class="text-2xl font-bold mb-4">Log In</h2>
+                <p class="text-gray-600 mb-8">
+                    Welcome back! Please enter your details.
+                </p>
+
+                <!-- Display error message if login_error is true -->
+                <% if (login_error) %>
+                <div class="mb-4 text-red-500 font-semibold">
+                    Wrong password or username, try again.
+                </div>
+                <% endif %>
+
+                <form action="/login" method="POST">
+                    <div class="mb-4">
+                        <label for="text" class="block text-gray-700"
+                            >Username</label
+                        >
+                        <input
+                            type="text"
+                            id="text"
+                            name="username"
+                            class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-purple-500"
+                            required
+                        />
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block text-gray-700"
+                            >Password</label
+                        >
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-purple-500"
+                            required
+                        />
+                    </div>
+                    <div class="mb-4 text-right">
+                        <a
+                            href="#"
+                            onclick="openForgotPasswordModal()"
+                            class="text-purple-500 hover:underline"
+                        >
+                            Forgot password?
+                        </a>
+                    </div>
+                    <button
+                        type="submit"
+                        class="bg-purple-500 text-white font-semibold rounded-md py-2 px-4 w-full hover:bg-purple-600"
+                    >
+                        Log In
+                    </button>
+                </form>
+
+                <div class="flex items-center my-6">
+                    <hr class="flex-grow border-gray-300" />
+                    <span class="px-3 text-gray-500">Or continue with</span>
+                    <hr class="flex-grow border-gray-300" />
+                </div>
+                <div class="flex space-x-4">
+                    <button
+                        class="flex items-center justify-center w-full bg-gray-100 rounded-md py-2 px-4 hover:bg-gray-200"
+                        onclick="redirectToGoogleAuth()"
+                    >
+                        <img
+                            src="https://img.icons8.com/color/24/000000/google-logo.png"
+                            alt="Google"
+                            class="w-5 h-5 mr-2"
+                        />
+                        Google
+                    </button>
+                    <button
+                        class="flex items-center justify-center w-full bg-gray-100 rounded-md py-2 px-4 hover:bg-gray-200"
+                    >
+                        <img
+                            src="https://img.icons8.com/color/24/000000/facebook-new.png"
+                            alt="Facebook"
+                            class="w-5 h-5 mr-2"
+                        />
+                        Facebook
+                    </button>
+                </div>
+                <p class="text-gray-600 mt-8 text-center">
+                    Don’t have an account?
+                    <a
+                        href="#"
+                        class="text-purple-500 hover:underline"
+                        onclick="openSignUpModal()"
+                        >Sign up</a
+                    >
+                </p>
+            </div>
+            <!-- Right: Image Section -->
+            <div class="hidden lg:block w-1/2 bg-purple-500 relative">
+                <img
+                    src="/assets/images/penn_campus.jpg"
+                    alt="Penn Campus"
+                    class="object-cover w-full h-full"
+                />
+            </div>
+        </div>
+        <% endif %>
+        <div
+            id="signup-modal"
+            class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center transition-opacity duration-150 opacity-0 scale-95"
+        >
+            <div
+                class="bg-white w-full max-w-md rounded-lg shadow-lg p-8 relative transform transition-transform duration-150"
+            >
+                <button
+                    class="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+                    onclick="closeSignUpModal()"
+                >
+                    ✖
+                </button>
+                <h2 class="text-2xl font-bold mb-4">Sign Up</h2>
+                <p class="text-gray-600 mb-6">
+                    Create an account to get started.
+                </p>
+
+                <form
+                    action="/signup"
+                    method="POST"
+                    onsubmit="return validateSignupPasswords()"
+                >
+                    <div class="mb-4">
+                        <label for="signup-username" class="block text-gray-700"
+                            >Username</label
+                        >
+                        <input
+                            type="text"
+                            id="signup-username"
+                            name="username"
+                            class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-purple-500"
+                            required
+                        />
+                    </div>
+                    <div class="mb-4">
+                        <label for="signup-password" class="block text-gray-700"
+                            >Password</label
+                        >
+                        <input
+                            type="password"
+                            id="signup-password"
+                            name="password"
+                            class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-purple-500"
+                            required
+                        />
+                    </div>
+                    <div class="mb-4">
+                        <label
+                            for="signup-password-confirm"
+                            class="block text-gray-700"
+                            >Confirm Password</label
+                        >
+                        <input
+                            type="password"
+                            id="signup-password-confirm"
+                            name="password_confirm"
+                            class="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:border-purple-500"
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        class="bg-purple-500 text-white font-semibold rounded-md py-2 px-4 w-full hover:bg-purple-600"
+                    >
+                        Sign Up
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div
+            id="forgotPasswordModal"
+            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden"
+            onclick="closeModalOnOverlayClick(event)"
+        >
+            <div class="bg-white rounded-lg p-6 w-80">
+                <h2 class="text-xl font-semibold mb-4">Forgot Password</h2>
+                <form onsubmit="handleForgotPasswordSubmit(event)">
+                    <!-- Username Field -->
+                    <div class="mb-4">
+                        <label for="username" class="block text-gray-700 mb-1"
+                            >Username</label
+                        >
+                        <input
+                            type="text"
+                            id="forgot-pwd-username"
+                            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter your username"
+                            required
+                        />
+                    </div>
+                    <!-- New Password Field -->
+                    <div class="mb-4">
+                        <label
+                            for="newPassword"
+                            class="block text-gray-700 mb-1"
+                            >New Password</label
+                        >
+                        <input
+                            type="password"
+                            id="forgot-pwd-newPassword"
+                            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter new password"
+                            required
+                        />
+                    </div>
+                    <!-- Confirm Password Field -->
+                    <div class="mb-4">
+                        <label
+                            for="confirmPassword"
+                            class="block text-gray-700 mb-1"
+                            >Confirm Password</label
+                        >
+                        <input
+                            type="password"
+                            id="forgot-pwd-confirmPassword"
+                            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Confirm new password"
+                            required
+                        />
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onclick="closeForgotPasswordModal()"
+                            class="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // Open Modal
+            function openChangePasswordModal() {
+                document
+                    .getElementById("changePasswordModal")
+                    .classList.remove("hidden");
+            }
+            function closeChangePasswordModal() {
+                document
+                    .getElementById("changePasswordModal")
+                    .classList.add("hidden");
+            }
+
+            function closeModalOnOverlayClick(event) {
+                if (
+                    event.target ===
+                    document.getElementById("changePasswordModal")
+                ) {
+                    closeChangePasswordModal();
+                }
+            }
+
+            function handleChangePasswordSubmit(e) {
+                e.preventDefault(); // Prevent default form submission behavior
+
+                // Retrieve input field values
+                const newPassword = document.getElementById(
+                    "change-pwd-newPassword"
+                ).value;
+                const confirmPassword = document.getElementById(
+                    "change-pwd-confirmPassword"
+                ).value;
+
+                // Validate if passwords match
+                if (newPassword !== confirmPassword) {
+                    alert("Passwords do not match. Please try again.");
+                    return;
+                }
+
+                // Send POST request to /change_password
+                fetch("/change_password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ newPassword }),
+                })
+                    .then((response) => {
+                        if (response.ok) {
+                            alert("Password changed successfully!");
+                            changePasswordModal.classList.add("hidden"); // Close modal
+                        } else {
+                            alert(
+                                "Failed to change password. Please try again."
+                            );
+                        }
+                    })
+                    .catch(() => {
+                        alert("An error occurred. Please try again.");
+                    });
+            }
+
+            function openForgotPasswordModal() {
+                document
+                    .getElementById("forgotPasswordModal")
+                    .classList.remove("hidden");
+            }
+
+            function closeForgotPasswordModal() {
+                document
+                    .getElementById("forgotPasswordModal")
+                    .classList.add("hidden");
+            }
+
+            function closeModalOnOverlayClick(event) {
+                if (
+                    event.target ===
+                    document.getElementById("forgotPasswordModal")
+                ) {
+                    closeForgotPasswordModal();
+                }
+            }
+
+            async function handleForgotPasswordSubmit(e) {
+                e.preventDefault();
+
+                // Get form values
+                const username = document
+                    .getElementById("forgot-pwd-username")
+                    .value.trim();
+                const newPassword = document
+                    .getElementById("forgot-pwd-newPassword")
+                    .value.trim();
+                const confirmPassword = document
+                    .getElementById("forgot-pwd-confirmPassword")
+                    .value.trim();
+
+                // Validate inputs
+                if (!username) {
+                    alert("Username is required.");
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    alert("Passwords do not match. Please try again.");
+                    return;
+                }
+
+                // Send POST request to /forgot_password
+                try {
+                    const response = await fetch("/forgot_password", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            username: username,
+                            newPassword: newPassword,
+                        }),
+                    });
+
+                    if (response.ok) {
+                        alert("Password successfully changed.");
+                        forgotPasswordModal.classList.add("hidden"); // Close modal
+                    } else {
+                        const result = await response.json();
+                        alert(
+                            result.message ||
+                                "Failed to change password. Please try again."
+                        );
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert(
+                        "An error occurred while processing your request. Please try again later."
+                    );
+                }
+            }
+
+            function validateSignupPasswords() {
+                const password =
+                    document.getElementById("signup-password").value;
+                const passwordConfirm = document.getElementById(
+                    "signup-password-confirm"
+                ).value;
+
+                if (password !== passwordConfirm) {
+                    alert("Passwords do not match. Please try again.");
+                    return false;
+                }
+
+                return true;
+            }
+
+            function redirectToGoogleAuth() {
+                const googleAuthURL =
+                    "https://accounts.google.com/o/oauth2/v2/auth" +
+                    "?client_id=" +
+                    "&redirect_uri=http://localhost:5000" +
+                    "&response_type=code" +
+                    "&scope=openid%20email%20profile";
+
+                // Redirect to Google OAuth 2.0 endpoint
+                window.location.href = googleAuthURL;
+            }
+        </script>
+    </body>
+</html>

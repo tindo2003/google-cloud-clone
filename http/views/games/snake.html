@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Snake Game</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin: 0;
+                padding: 0;
+                background-color: #f0f0f0;
+            }
+            canvas {
+                border: 2px solid #333;
+                margin-top: 20px;
+            }
+            h1 {
+                margin-top: 20px;
+            }
+            #score {
+                font-size: 1.2rem;
+                margin-top: 10px;
+            }
+            button {
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Snake Game</h1>
+        <p style="font-size: 1rem; color: #555; margin-top: 10px;">
+            Use the <strong>Arrow Keys</strong> to move the snake. Press <strong>Spacebar</strong> to pause/resume the game.
+        </p>
+        <div id="score">Score: 0</div>
+        <div id="pauseMessage">Game Paused</div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <br />
+        <button id="home" onclick="window.location.href='/game'">Return Home</button>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const canvas = document.getElementById("gameCanvas");
+                const ctx = canvas.getContext("2d");
+                const scoreDisplay = document.getElementById("score");
+                const pauseMessage = document.getElementById("pauseMessage");
+
+                const boxSize = 20; // Size of each square
+                const gridSize = canvas.width / boxSize;
+
+                let snake = [{ x: 9, y: 9 }]; // Initial snake position
+                let food = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+                let direction = "RIGHT";
+                let score = 0;
+
+                let gameInterval;
+                let isPaused = false;
+
+                function drawSquare(x, y, color) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * boxSize, y * boxSize, boxSize, boxSize);
+                    ctx.strokeStyle = "#333";
+                    ctx.strokeRect(x * boxSize, y * boxSize, boxSize, boxSize);
+                }
+
+                function drawSnake() {
+                    snake.forEach(segment => drawSquare(segment.x, segment.y, "green"));
+                }
+
+                function drawFood() {
+                    drawSquare(food.x, food.y, "red");
+                }
+
+                function updateSnake() {
+                    const head = { ...snake[0] };
+
+                    switch (direction) {
+                        case "UP":
+                            head.y -= 1;
+                            break;
+                        case "DOWN":
+                            head.y += 1;
+                            break;
+                        case "LEFT":
+                            head.x -= 1;
+                            break;
+                        case "RIGHT":
+                            head.x += 1;
+                            break;
+                    }
+
+                    // Check for collision
+                    if (
+                        head.x < 0 ||
+                        head.x >= gridSize ||
+                        head.y < 0 ||
+                        head.y >= gridSize ||
+                        snake.some(segment => segment.x === head.x && segment.y === head.y)
+                    ) {
+                        clearInterval(gameInterval);
+                        alert(`Game Over! Your score is ${score}.`);
+                        resetGame();
+                        return;
+                    }
+
+                    snake.unshift(head);
+
+                    // Check if the snake ate the food
+                    if (head.x === food.x && head.y === food.y) {
+                        score++;
+                        scoreDisplay.textContent = `Score: ${score}`;
+                        generateFood();
+                    } else {
+                        snake.pop();
+                    }
+                }
+
+                function generateFood() {
+                    food = {
+                        x: Math.floor(Math.random() * gridSize),
+                        y: Math.floor(Math.random() * gridSize),
+                    };
+                    if (snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+                        generateFood(); // Regenerate food if it spawns on the snake
+                    }
+                }
+
+                function gameLoop() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    updateSnake();
+                    drawSnake();
+                    drawFood();
+                }
+
+                function resetGame() {
+                    snake = [{ x: 9, y: 9 }];
+                    direction = "RIGHT";
+                    score = 0;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    generateFood();
+                    startGame();
+                }
+
+                function togglePause() {
+                    if (isPaused) {
+                        // Resume the game
+                        isPaused = false;
+                        pauseMessage.style.display = "none";
+                        startGame();
+                    } else {
+                        // Pause the game
+                        isPaused = true;
+                        pauseMessage.style.display = "block";
+                        clearInterval(gameInterval);
+                    }
+                }
+
+                function changeDirection(event) {
+                    const key = event.key;
+                    if (key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+                    if (key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+                    if (key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+                    if (key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+                    if (key === " " || key === "Spacebar") togglePause(); // Pause/Resume on Spacebar
+                }
+
+                function startGame() {
+                    clearInterval(gameInterval);
+                    gameInterval = setInterval(gameLoop, 100);
+                }
+
+                document.addEventListener("keydown", changeDirection);
+                resetGame();
+            });
+        </script>
+    </body>
+</html>

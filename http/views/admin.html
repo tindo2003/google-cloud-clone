@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    .pagination-button {
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        margin: 0 0.25rem;
+        background-color: #4a5568;
+        color: white;
+        border-radius: 0.25rem;
+    }
+    .pagination-button:hover {
+        background-color: #2d3748;
+    }
+    .hidden { display: none; }
+    </style>
+  <script>
+
+    let fe_nodes = []; // Declare the nodes array globally to update it dynamically
+    let be_nodes = [];
+    let kvs_each_node = {};
+
+    async function fetchFENodeData() {
+        try {
+            const response = await fetch("http://localhost:8000/get_servers", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Node Data:", data);
+
+            // Assuming the API returns an array of nodes
+            fe_nodes = [
+            ...data.alive_servers.map(server => ({ ...server, status: "Alive" })),
+            ...data.unalive_servers.map(server => ({ ...server, status: "Down" }))
+            ];
+
+            console.log("Formatted Nodes Data:", fe_nodes);
+
+            renderNodes(fe_nodes, "Frontend"); // Update the UI with the new nodes data
+        } catch (error) {
+            console.error("Failed to fetch node data:", error);
+        }
+    }
+
+    async function fetchBENodeData() {
+        try {
+            const response = await fetch("http://localhost:9000/get_servers", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Node Data:", data);
+
+            // Assuming the API returns an array of nodes
+            be_nodes = [
+            ...data.Active_servers.map(server => ({ ...server, status: "Alive" })),
+            ...data.Inactive_servers.map(server => ({ ...server, status: "Down" }))
+            ];
+
+            console.log("Formatted Nodes Data:", be_nodes);
+
+            renderNodes(be_nodes, "Backend"); // Update the UI with the new nodes data
+        } catch (error) {
+            console.error("Failed to fetch node data:", error);
+        }      
+    }
+
+
+    // Function to filter objects with status "Alive" and send requests
+    async function sendRequestsToAliveServers() {
+        console.log("My backend node list:", be_nodes);
+
+        // Filter servers with status "Alive"
+        const aliveServers = be_nodes.filter(server => server.status === "Alive");
+
+        // Send a `/get_kvs_store` request to each server
+        for (const server of aliveServers) {
+            const url = `http://${server.address}:${server.port}/get_kvs_store`;
+            try {
+                const response = await fetch(url, { method: "GET" });
+                if (response.ok) {
+                    data = await response.json();
+                    const tableData = processKVSData(data);
+                    // Store the table in `kvs_each_node` using the server identifier as the key
+                    kvs_each_node[`${server.address}:${server.port}`] = tableData;
+                } else {
+                    console.error(`Error from ${server.address}:${server.port}:`, response.statusText);
+                }
+            } catch (error) {
+                console.error(`Request to ${server.address}:${server.port} failed:`, error);
+            }
+        }
+    }
+
+
+    function processKVSData(data) {
+        const groupedTables = {}; // Store grouped data by table type
+        const tableHeaders = {}; // Dynamically store headers for each table type
+
+        for (const [rowKey, cols] of Object.entries(data)) {
+            const tableType = rowKey.split('#')[1]; // e.g., "account", "storage", "email", etc.
+
+            if (!groupedTables[tableType]) {
+                groupedTables[tableType] = [];
+                tableHeaders[tableType] = new Set(['Row Key']); 
+            }
+
+            const row = { 'Row Key': rowKey };
+            for (const [colKey, colValue] of Object.entries(cols)) {
+                const asciiValue = String.fromCharCode(...colValue.value);
+                row[colKey] = asciiValue;
+                tableHeaders[tableType].add(colKey);
+            }
+
+            groupedTables[tableType].push(row);
+        }
+
+        const formattedTables = {};
+        for (const [tableType, rows] of Object.entries(groupedTables)) {
+            const headers = Array.from(tableHeaders[tableType]); 
+            const table = [headers]; 
+
+            for (const row of rows) {
+                const rowData = headers.map(header => row[header] || ''); 
+                table.push(rowData);
+            }
+
+            formattedTables[tableType] = table;
+        }
+
+        return formattedTables;
+    }
+
+    function generateRandomArray(length, min = 0, max = 100) {
+        const randomArray = Array.from({ length }, () =>
+            Math.floor(Math.random() * (max - min + 1)) + min
+        );
+        return randomArray;
+    }
+
+
+    // Fetch data initially and set up periodic updates every 5 seconds
+    async function updateAndSendRequests() {
+        await fetchBENodeData(); // Fetch backend node data
+        await sendRequestsToAliveServers(); // Send requests after the data is updated
+        // kvs_each_node["testnode:2012"] = {
+        //    "test_table1": [generateRandomArray(2),generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2), generateRandomArray(2)]
+
+        // }
+        // console.log(kvs_each_node);
+        renderTables(kvs_each_node);
+    }
+
+    // Fetch data initially and set up periodic updates every 5 seconds
+    fetchFENodeData(); 
+    updateAndSendRequests(); 
+
+    //setInterval(fetchNodeData, 5000);
+
+
+
+    // Render the nodes in the system
+    function renderNodes(nodes, nodeType) {
+        const nodesTable = document.getElementById("nodes-table-body");
+
+        // Add a section header for the node type
+        nodesTable.innerHTML += `
+            <tr class="bg-gray-100">
+                <td colspan="3" class="p-4 font-bold text-lg border border-gray-300 text-center">${nodeType} Nodes</td>
+            </tr>
+        `;
+
+        nodes.forEach((node, index) => {
+            nodesTable.innerHTML += `
+                <tr class="border-b border-gray-300">
+                    <td class="p-4 border border-gray-300 text-center align-middle">${node.address}:${node.port}</td>
+                    <td class="p-4 border border-gray-300 text-center align-middle">
+                        <span class="font-semibold ${
+                            node.status === "Alive" ? "text-green-500" : "text-red-500"
+                        }">${node.status}</span>
+                    </td>
+                    <td class="p-4 border border-gray-300 text-center align-middle">
+                        <button onclick="stopHeartbeat('${node.address}', ${node.port})"
+                                class="py-1 px-3 rounded ${
+                                    node.status === "Down" 
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                                        : "bg-yellow-500 text-white hover:bg-yellow-600"
+                                }" 
+                                ${node.status === "Down" ? "disabled" : ""}>
+                            Disable
+                        </button>
+                        <button onclick="restartHeartbeat('${node.address}', ${node.port})"
+                                class="py-1 px-3 rounded ml-2 ${
+                                    node.status === "Alive" 
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                                        : "bg-blue-500 text-white hover:bg-blue-600"
+                                }" 
+                                ${node.status === "Alive" ? "disabled" : ""}>
+                            Restart
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+    }
+
+
+    async function stopHeartbeat(addr, port) {
+        alert(`Disabling node: ${addr}:${port}`);
+        try {
+            const response = await fetch(`http://${addr}:${port}/stop`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Server Response:", result);
+            alert("Heartbeat stopped successfully.");
+        } catch (error) {
+            console.error("Failed to send STOP command:", error);
+            alert("Failed to stop heartbeat.");
+        }
+    }
+
+    // Function to restart the heartbeat
+    async function restartHeartbeat(addr, port) {
+        alert(`Restarting node: ${addr}:${port}`);
+        try {
+            const response = await fetch(`http://${addr}:${port}/restart`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Server Response:", result);
+            alert("Heartbeat restarted successfully.");
+        } catch (error) {
+            console.error("Failed to send RESTART command:", error);
+            alert("Failed to restart heartbeat.");
+        }
+    }
+
+
+    function createTable(data, tableId) {
+        const table = document.createElement('table');
+        table.classList.add('table-auto', 'border-collapse', 'border', 'border-gray-400', 'w-full', 'mb-8');
+        table.id = `table-${tableId}`;
+
+        // Create header row
+        const headerRow = document.createElement('tr');
+        headerRow.innerHTML = data[0].map(header => `
+            <th class="border border-gray-400 px-4 py-2">${header}</th>
+        `).join(''); // Use the first element of the data array as the header row
+
+        table.appendChild(headerRow);
+
+        const rows = data.slice(1);
+
+            // Create data rows
+        rows.forEach((row, index) => {
+            const dataRow = document.createElement('tr');
+            dataRow.classList.add(`page-${Math.floor(index / 10)}`);
+            if (index >= 10) dataRow.classList.add('hidden');
+
+            dataRow.innerHTML = row.map(cell => `
+                <td class="border border-gray-400 px-4 py-2 max-h-20 overflow-auto">
+                    <div class="max-h-20 overflow-y-auto">
+                        ${cell}
+                    </div>
+                </td>
+            `).join(''); // Join the cells into a single string for the row
+            table.appendChild(dataRow);
+        });
+
+        // Create pagination
+        const paginationContainer = document.createElement('div');
+        paginationContainer.classList.add('flex', 'justify-center', 'mt-4');
+
+        const totalPages = Math.ceil(data.length / 10);
+        for (let i = 0; i < totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i + 1;
+            button.classList.add('pagination-button');
+            console.log(tableId)
+            console.log(i)
+            button.addEventListener('click', () => {
+                document.querySelectorAll(`#table-${tableId} .page-${i}`).forEach(row => row.classList.remove('hidden'));
+                document.querySelectorAll(`#table-${tableId} tr:not(.page-${i}):not(:first-child)`).forEach(row => row.classList.add('hidden'));
+            });
+            paginationContainer.appendChild(button);
+        }
+
+        return { table, paginationContainer };
+    }
+
+    function renderTables(kvsData) {
+        const container = document.getElementById('tables-container');
+        Object.keys(kvsData).forEach(node => {
+            const nodeHeader = document.createElement('h2');
+            nodeHeader.textContent = node;
+            nodeHeader.classList.add('text-xl', 'font-semibold', 'mb-4');
+            container.appendChild(nodeHeader);
+
+            Object.keys(kvsData[node]).forEach(tableName => {
+                const tableHeader = document.createElement('h3');
+                tableHeader.textContent = tableName;
+                tableHeader.classList.add('text-lg', 'font-medium', 'mb-2');
+                container.appendChild(tableHeader);
+                
+                const [ip, port] = node.split(":");
+                const { table, paginationContainer } = createTable(kvsData[node][tableName], `${port}-${tableName}`);
+                container.appendChild(table);
+                container.appendChild(paginationContainer);
+            });
+        });
+    }
+
+    // Initialize the page
+    window.onload = function () {
+      //renderNodes(fe_nodes, "Frontend");
+      //renderNodes(be_nodes, "Backend");
+      //renderKeyValuePairs();
+    };
+  </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-blue-600 text-white py-4 px-8">
+    <h1 class="text-2xl font-bold">Admin Console</h1>
+  </header>
+  <main class="p-8">
+    <!-- Nodes Section -->
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">Nodes in the System</h2>
+    <table class="table-auto w-full border-collapse border border-gray-300">
+        <thead class="bg-gray-200">
+            <tr class="text-center">
+                <th class="p-4 border border-gray-300">Node Address</th>
+                <th class="p-4 border border-gray-300">Status</th>
+                <th class="p-4 border border-gray-300">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="nodes-table-body"></tbody>
+    </table>
+    </section>
+
+    <!-- Key-Value Pairs Section -->
+    <div class="container mx-auto py-8">
+        <h1 class="text-2xl font-bold mb-6">Node Tables</h1>
+
+        <div id="tables-container">
+            <!-- Tables will be dynamically inserted here -->
+        </div>
+    </div>
+
+
+  </main>
+</body>
+</html>

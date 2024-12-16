@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tic Tac Toe</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin-top: 50px;
+            }
+            #board {
+                display: grid;
+                grid-template-columns: repeat(3, 100px);
+                grid-template-rows: repeat(3, 100px);
+                gap: 5px;
+                justify-content: center;
+                margin: 0 auto;
+            }
+            .cell {
+                width: 100px;
+                height: 100px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 2rem;
+                font-weight: bold;
+                background-color: #f0f0f0;
+                border: 2px solid #ccc;
+                cursor: pointer;
+            }
+            .cell.taken {
+                cursor: not-allowed;
+                background-color: #ddd;
+            }
+            #message {
+                margin-top: 20px;
+                font-size: 1.2rem;
+            }
+            button {
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <h1>Tic Tac Toe</h1>
+        <div id="board"></div>
+        <div id="message"></div>
+        <button id="restart">Restart Game</button>
+        <br />
+        <button id="home" onclick="window.location.href='/game'">Return Home</button>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const board = document.getElementById("board");
+                const message = document.getElementById("message");
+                const restartBtn = document.getElementById("restart");
+
+                let currentPlayer = "X";
+                let gameState = Array(9).fill(null); // Represents the board
+                let gameActive = true;
+
+                const winningConditions = [
+                    [0, 1, 2], // Top row
+                    [3, 4, 5], // Middle row
+                    [6, 7, 8], // Bottom row
+                    [0, 3, 6], // First column
+                    [1, 4, 7], // Second column
+                    [2, 5, 8], // Third column
+                    [0, 4, 8], // Diagonal
+                    [2, 4, 6], // Diagonal
+                ];
+
+                function createBoard() {
+                    board.innerHTML = "";
+                    gameState = Array(9).fill(null);
+                    currentPlayer = "X";
+                    gameActive = true;
+                    message.textContent = `Player ${currentPlayer}'s turn`;
+
+                    for (let i = 0; i < 9; i++) {
+                        const cell = document.createElement("div");
+                        cell.classList.add("cell");
+                        cell.dataset.index = i;
+                        board.appendChild(cell);
+                    }
+                }
+
+                function checkWinner() {
+                    for (const condition of winningConditions) {
+                        const [a, b, c] = condition;
+                        if (
+                            gameState[a] &&
+                            gameState[a] === gameState[b] &&
+                            gameState[a] === gameState[c]
+                        ) {
+                            return gameState[a];
+                        }
+                    }
+                    return gameState.includes(null) ? null : "Draw";
+                }
+
+                function handleCellClick(event) {
+                    const cell = event.target;
+                    const index = cell.dataset.index;
+
+                    if (!gameActive || cell.classList.contains("taken")) return;
+
+                    cell.textContent = currentPlayer;
+                    cell.classList.add("taken");
+                    gameState[index] = currentPlayer;
+
+                    const winner = checkWinner();
+                    if (winner) {
+                        gameActive = false;
+                        message.textContent =
+                            winner === "Draw" ? "It's a draw!" : `Player ${winner} wins!`;
+                    } else {
+                        currentPlayer = currentPlayer === "X" ? "O" : "X";
+                        message.textContent = `Player ${currentPlayer}'s turn`;
+                    }
+                }
+
+                board.addEventListener("click", handleCellClick);
+                restartBtn.addEventListener("click", createBoard);
+
+                createBoard(); // Initialize the board on page load
+            });
+        </script>
+    </body>
+</html>

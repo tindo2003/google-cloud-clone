@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Input with Chips</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  
+  <!-- Email Compose Box -->
+  <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-4">
+    <!-- To Field with Chips -->
+    <label class="block text-sm font-semibold text-gray-700 mb-1">To</label>
+    <div id="chip-container" class="flex flex-wrap items-center border border-gray-300 rounded p-2 mb-4">
+      <input id="email-input" type="text" placeholder="Type an email and press Enter" class="flex-grow outline-none p-1 text-sm" />
+    </div>
+
+    <!-- Subject Field -->
+    <input type="text" id="subject-input" placeholder="Subject" class="w-full p-2 border-b border-gray-300 focus:outline-none mb-4" />
+
+
+    <!-- Message Body -->
+    <textarea id="message-input" placeholder="Message" rows="6" class="w-full p-2 border border-gray-300 rounded focus:outline-none resize-none mb-4"></textarea>
+
+    <!-- Send Button -->
+    <button id="send-button" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Send</button>
+
+  </div>
+
+  <script>
+    const emailInput = document.getElementById("email-input");
+    const chipContainer = document.getElementById("chip-container");
+    const sendButton = document.getElementById("send-button");
+
+
+    // Add event listener for the Enter key
+    emailInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" && emailInput.value.trim() !== "") {
+        event.preventDefault();
+        addEmailChip(emailInput.value.trim());
+        emailInput.value = "";
+      }
+    });
+
+    // Function to create an email chip
+    function addEmailChip(email) {
+      const chip = document.createElement("div");
+      chip.className = "flex items-center bg-gray-200 text-gray-700 rounded-full px-3 py-1 mr-2 mb-2";
+      
+      const initial = document.createElement("span");
+      initial.className = "bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-semibold mr-2";
+      initial.innerText = email[0].toLowerCase();
+      
+      const emailText = document.createElement("span");
+      emailText.innerText = email;
+      emailText.className = "text-sm";
+
+      const removeButton = document.createElement("button");
+      removeButton.className = "ml-2 text-gray-500 hover:text-gray-700 focus:outline-none";
+      removeButton.innerHTML = "&times;";
+      removeButton.onclick = function() {
+        chipContainer.removeChild(chip);
+      };
+
+      chip.appendChild(initial);
+      chip.appendChild(emailText);
+      chip.appendChild(removeButton);
+      chipContainer.insertBefore(chip, emailInput);
+    }
+
+     
+    sendButton.addEventListener("click", function() {
+      // Collect email addresses from chips
+      const emailChips = chipContainer.querySelectorAll("div");
+      const emailAddresses = Array.from(emailChips).map(chip => chip.querySelector("span:nth-child(2)").innerText);
+
+      // Collect subject and message content
+      const subject = document.getElementById("subject-input").value.trim();
+      const message = document.getElementById("message-input").value.trim();
+      const currentTime = new Date().toISOString();
+      // Log the collected data (you can replace this with further processing)
+      console.log("To:", emailAddresses);
+      console.log("Subject:", subject);
+      console.log("Message:", message);
+      console.log("Time:", currentTime);
+
+      const payloads = emailAddresses.map(email => ({
+        recipient: email, // Single recipient per payload
+        subject: subject,
+        message: message,
+        timestamp: currentTime
+    }));
+
+      // send all requests
+      const requests = payloads.map(payload => 
+          fetch("/send_email", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+          })
+          .then(response => response.json())
+          .then(data => {
+              console.log(`Email to ${payload.recipient} sent successfully:`, data);
+          })
+          .catch(error => {
+              console.error(`Failed to send email to ${payload.recipient}:`, error);
+          })
+      );
+
+
+          // wait for requests to complete
+
+          Promise.all(requests)
+            .then(() => {
+                console.log("All email requests have been processed.");
+            })
+            .catch(error => {
+                console.error("An error occurred while sending emails:", error);
+            });
+            })
+  </script>
+
+</body>
+</html>

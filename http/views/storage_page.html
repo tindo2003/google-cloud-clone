@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white">
+    <!-- Header -->
+    <header class="flex items-center bg-gray-100 justify-between px-6 py-4 shadow">
+        <div class="flex items-center">
+            <!-- <img src="logo.png" alt="Logo" class="h-8 w-8"> -->
+            <h1 class="ml-2 text-2xl font-semibold">My Drive</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex">
+        <!-- Sidebar -->
+       <div class="w-64 h-screen bg-gray-100 p-6 flex flex-col justify-between">
+            <!-- New Folder and Upload Buttons -->
+            <div>
+                <button id="new-folder-btn" class="w-full flex items-center px-4 py-2 rounded-lg mb-4 hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mr-2">
+                        <path fill-rule="evenodd"
+                            d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15Zm-6.75-10.5a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V10.5Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    New Folder
+                </button>
+                <button id="upload-files-btn" class="w-full flex items-center px-4 py-2 rounded-lg hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" id="Upload-File--Streamline-Core"
+                        class="w-6 h-6 mr-2">
+                        <desc>Upload File Streamline Icon: https://streamlinehq.com</desc>
+                        <g id="upload-file">
+                            <path id="Vector" stroke="#000000" stroke-linecap="round" stroke-linejoin="round"
+                                d="M12.5 12.5c0 0.2652 -0.1054 0.5196 -0.2929 0.7071s-0.4419 0.2929 -0.7071 0.2929h-9c-0.26522 0 -0.51957 -0.1054 -0.70711 -0.2929C1.60536 13.0196 1.5 12.7652 1.5 12.5v-11c0 -0.26522 0.10536 -0.51957 0.29289 -0.707107C1.98043 0.605357 2.23478 0.5 2.5 0.5H9L12.5 4v8.5Z"
+                                stroke-width="1"></path>
+                            <path id="vector 377" stroke="#000000" stroke-linecap="round" stroke-linejoin="round"
+                                d="m9 6.5 -2 -2 -2 2" stroke-width="1"></path>
+                            <path id="vector 378" stroke="#000000" stroke-linecap="round" stroke-linejoin="round"
+                                d="M7 4.5 7 10" stroke-width="1"></path>
+                        </g>
+                    </svg>
+                    Upload File
+                </button>
+            </div>
+
+            <!-- Back Button -->
+            <div>
+                <button id="back-btn" class="w-full flex items-center px-4 py-2 rounded-lg hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mr-2">
+                        <path fill-rule="evenodd"
+                            d="M10.03 3.97a.75.75 0 0 1 0 1.06L5.81 9.25H21a.75.75 0 0 1 0 1.5H5.81l4.22 4.22a.75.75 0 1 1-1.06 1.06l-5.5-5.5a.75.75 0 0 1 0-1.06l5.5-5.5a.75.75 0 0 1 1.06 0Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Content Area -->
+        <main class="flex-1 p-6">
+            <!-- Breadcrumbs -->
+            <div id="breadcrumbs" class="mb-3 text-gray-600">
+                <!-- Breadcrumb links will be dynamically populated here -->
+            </div>
+
+            <!-- Action Toolbar -->
+         <div id="action-buttons" class="flex items-center mb-3 bg-zinc-100 py-1 rounded-lg opacity-0 pointer-events-none transition-opacity duration-300">
+            <button class="flex items-center text-gray-600 hover:text-gray-800 mr-4 ml-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+                    <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+                </svg>
+                Rename
+            </button>
+            <button class="flex items-center text-gray-600 hover:text-gray-800 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                    <path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z" clip-rule="evenodd" />
+                </svg>
+                Delete
+            </button>
+            <button class="flex items-center text-gray-600 hover:text-gray-800 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                    <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+                Move To
+            </button>
+        </div>
+
+
+            <!-- Folder contents -->
+            <div id="folder-contents" class="text-gray-800">
+                <!-- Folder contents will be dynamically populated here -->
+            </div>
+
+
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 w-1/2">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Upload Files</h2>
+                <button id="close-upload-modal" class="text-gray-600 hover:text-gray-800">
+                    <!-- Close Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="upload-dropzone" class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg h-64 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-10 w-10 text-gray-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+                </svg>
+                <p class="mt-4 text-gray-600">Click or drag a file to this area to upload</p>
+                <input id="file-input" type="file" class="hidden" accept=".txt, .json, .pdf, image/*, .mp3, .mp4">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        let navigationPath = ["/"];
+        // Get elements
+        const uploadBtn = document.getElementById('upload-files-btn');
+        const uploadModal = document.getElementById('upload-modal');
+        const closeModalBtn = document.getElementById('close-upload-modal');
+        const dropzone = document.getElementById('upload-dropzone');
+        const fileInput = document.getElementById('file-input');
+        const actionButtonsDiv = document.getElementById("action-buttons");
+        //actionButtonsDiv.classList.add("hidden");
+
+
+        // Show the upload modal when upload button is clicked
+        uploadBtn.addEventListener('click', () => {
+            uploadModal.classList.remove('hidden');
+        });
+
+        // Hide the upload modal when close button is clicked
+        closeModalBtn.addEventListener('click', () => {
+            uploadModal.classList.add('hidden');
+        });
+
+        // Handle click on dropzone to trigger file input
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle drag over dropzone
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-green-500');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-green-500');
+        });
+
+        // Handle drop on dropzone
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-green-500');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        // Handle file input change
+        fileInput.addEventListener('change', () => {
+            const files = fileInput.files;
+            handleFiles(files);
+        });
+
+        // Function to handle files
+        async function handleFiles(files) {
+            uploadModal.classList.add('hidden');
+            if (files.length > 1) {
+                alert('Please upload only one file at a time.');
+                return;
+            }
+
+            const file = files[0]; // Get the single file
+
+            // Extract file extension
+            const fileName = file.name;
+            const fileExtension = fileName.split('.').pop().toLowerCase(); // Get the last part after the dot
+
+            // Quick validation for extension (optional)
+            if (!fileExtension) {
+                alert('File extension is missing.');
+                return;
+            }
+
+            // Prepare FormData
+            const formData = new FormData();
+
+            // Append file and metadata
+            formData.append('file', file);
+            formData.append('path', navigationPath[navigationPath.length - 1]); // Current path
+            formData.append('name', fileName); // File name
+            formData.append('type', fileExtension); // File extension
+            formData.append('size', file.size); // File size in bytes
+            console.log(formData);
+
+            try {
+                const response = await fetch('/upload_file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Upload successful:', data);
+                    updateView();
+                } else {
+                    console.error('Failed to upload file.');
+                }
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                // Display an error message to the user
+            }
+
+
+            // Close the upload modal
+            //uploadModal.classList.add('hidden');
+            //updateView();
+        }
+
+
+        // Function to fetch entries (using synthetic data for now)
+        //  TODO: change this later
+        async function getEntries(relativePath) {
+            const getEntriesURL = `/list_entries?relative_path=${encodeURIComponent(relativePath)}`;
+            try {
+                const response = await fetch(getEntriesURL, {
+                    method: "GET",
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json(); // Parse JSON response
+                return data; // Explicitly return the fetched data
+            } catch (error) {
+                console.error("Error fetching entries:", error);
+                throw error; // Re-throw the error if needed
+            }
+        }
+
+
+        // Function to dynamically create buttons with event listeners
+        /* isFile is a bool, indicating whether or not the selected item is file or folder */
+        function createActionButtons(relativePath, isFile) {
+            // Clear any existing buttons
+            actionButtonsDiv.innerHTML = "";
+
+            // Create Rename button
+            const renameButton = document.createElement("button");
+            renameButton.className = "flex items-center text-gray-600 hover:text-gray-800 mr-4";
+            renameButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                    <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
+                    <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+                </svg>
+                Rename
+            `;
+            renameButton.addEventListener("click", async () => {
+                const newName = prompt(`Enter the new name for file at ${relativePath}:`);
+                if (newName) {
+                    try {
+                        const response = await fetch("/rename", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ path: relativePath, newName }),
+                        });
+                        if (response.ok) {
+                            console.log(`Renamed ${relativePath} to ${newName}`);
+                            updateView();
+                        } else {
+                            console.error("Failed to rename.");
+                        }
+                    } catch (error) {
+                        console.error("Error during rename:", error);
+                    }
+                }
+            });
+            
+            // Create Delete button
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "flex items-center text-gray-600 hover:text-gray-800 mr-4";
+            deleteButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                    <path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z" clip-rule="evenodd" />
+                </svg>
+                Delete
+            `;
+            deleteButton.addEventListener("click", async () => {
+                const confirmDelete = confirm(`Are you sure you want to delete ${relativePath}?`);
+                if (confirmDelete) {
+                    try {
+                        // Use appropriate route based on isFile
+                        const route = isFile ? "/delete_file" : "/delete_folder";
+
+                        const response = await fetch(route, {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ path: relativePath }),
+                        });
+
+                        if (response.ok) {
+                            console.log(`Deleted: ${relativePath}`);
+                            updateView();
+                        } else {
+                            console.error("Failed to delete.");
+                        }
+                    } catch (error) {
+                        console.error("Error during delete:", error);
+                    }
+                }
+            });
+
+            // Create Move To button
+            const moveButton = document.createElement("button");
+            moveButton.className = "flex items-center text-gray-600 hover:text-gray-800 mr-4";
+            moveButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                    <path fill-rule="evenodd" d="M7.5 3.75A1.5 1.5 0 0 0 6 5.25v13.5a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V15a.75.75 0 0 1 1.5 0v3.75a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V5.25a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3V9A.75.75 0 0 1 15 9V5.25a1.5 1.5 0 0 0-1.5-1.5h-6Zm10.72 4.72a.75.75 0 0 1 1.06 0l3 3a.75.75 0 0 1 0 1.06l-3 3a.75.75 0 1 1-1.06-1.06l1.72-1.72H9a.75.75 0 0 1 0-1.5h10.94l-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+                Move To
+            `;
+            moveButton.addEventListener("click", async () => {
+                const newLocation = prompt(`Enter the new location for file at ${relativePath}:`);
+                if (newLocation) {
+                    try {
+                        const response = await fetch("/move", {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ oldPath: relativePath, newLocation }),
+                        });
+                        if (response.ok) {
+                            console.log(`Moved ${relativePath} to ${newLocation}`);
+                            updateView();
+                        } else {
+                            console.error("Failed to move.");
+                        }
+                    } catch (error) {
+                        console.error("Error during move:", error);
+                    }
+                }
+            });
+
+            // Create Download button (only for files)
+            if (isFile) {
+                const downloadButton = document.createElement("button");
+                downloadButton.className = "flex items-center text-gray-600 hover:text-gray-800 mr-4";
+                downloadButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M9 12l3 3m0 0 3-3m-3 3V2.25" />
+                    </svg>
+                    Download
+                `;
+                downloadButton.addEventListener("click", () => {
+                    // Trigger GET request to /download_file
+                    const downloadUrl = `/download_file?path=${encodeURIComponent(relativePath)}`;
+                    const a = document.createElement("a");
+                    a.href = downloadUrl;
+                    a.download = relativePath.split("/").pop(); // Extract the file name from the path
+                    a.click();
+                    console.log(`Downloading file from: ${downloadUrl}`);
+                });
+
+                // Append the Download button
+                actionButtonsDiv.appendChild(downloadButton);
+            }
+
+            // Append buttons to actionButtonsDiv
+            actionButtonsDiv.appendChild(renameButton);
+            actionButtonsDiv.appendChild(deleteButton);
+            actionButtonsDiv.appendChild(moveButton);
+        }
+
+        function showActionButtons() {
+            actionButtonsDiv.classList.remove("opacity-0", "pointer-events-none"); // Remove hidden state
+            actionButtonsDiv.classList.add("opacity-100"); // Add visible state
+        }
+
+        // Function to hide the action buttons with fade-out effect
+        function hideActionButtons() {
+            actionButtonsDiv.classList.add("opacity-0", "pointer-events-none"); // Add hidden state
+            actionButtonsDiv.classList.remove("opacity-100"); // Remove visible state
+        }
+        
+
+        // Function to update breadcrumbs and folder contents
+        async function updateView() {
+            const currentPath = navigationPath[navigationPath.length - 1];
+
+            const entries = await getEntries(currentPath);
+            console.log("received from backend ", entries);
+
+            // Update breadcrumbs
+            const breadcrumbsDiv = document.getElementById("breadcrumbs");
+            breadcrumbsDiv.innerHTML = ""; // Clear existing breadcrumbs
+
+            navigationPath.forEach((path, index) => {
+                const breadcrumb = document.createElement("a");
+                breadcrumb.href = "#";
+                breadcrumb.textContent = path === "/" ? "Root" : path.split("/").pop();
+                breadcrumb.className = "hover:underline";
+                breadcrumb.addEventListener("click", () => {
+                    navigationPath = navigationPath.slice(0, index + 1); // Truncate to the clicked path
+                    hideActionButtons(); // 
+                    updateView(); // Refresh view
+                });
+
+                breadcrumbsDiv.appendChild(breadcrumb);
+
+                // Add separator if not the last breadcrumb
+                if (index < navigationPath.length - 1) {
+                    const separator = document.createTextNode(" / ");
+                    breadcrumbsDiv.appendChild(separator);
+                }
+            });
+
+            // Update folder contents
+            const folderContentsDiv = document.getElementById("folder-contents");
+            folderContentsDiv.innerHTML = ""; // Clear existing contents
+
+            entries.data.forEach((entry) => {
+                const entryElement = document.createElement("div");
+                entryElement.textContent = entry.name;
+                entryElement.className = "flex items-center cursor-pointer hover:bg-zinc-200 rounded px-2 py-1 transition duration-200";
+
+                // Determine the type of entry and append the appropriate SVG icon
+                let iconSVG = "";
+
+                if (entry.type === "dir") {
+                    // Folder icon
+                    iconSVG = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                        <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
+                        </svg>
+                        `;
+                } else {
+                    const extension = entry.name.split('.').pop().toLowerCase();
+                    if (["png", "jpeg", "jpg", "gif", "bmp"].includes(extension)) {
+                    // Image file icon
+                    iconSVG = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                        <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0 0 21 18v-1.94l-2.69-2.689a1.5 1.5 0 0 0-2.12 0l-.88.879.97.97a.75.75 0 1 1-1.06 1.06l-5.16-5.159a1.5 1.5 0 0 0-2.12 0L3 16.061Zm10.125-7.81a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Z" clip-rule="evenodd" />
+                        </svg>
+                            `;
+                    } else if (["mp4", "mkv", "avi", "mov", "webm"].includes(extension)) {
+                        // Video file icon
+                        iconSVG = `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                                <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+                            </svg>`;
+                    } else if (["mp3", "wav", "ogg", "flac"].includes(extension)) {
+                        // Music file icon
+                        iconSVG = `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 w-6 h-6 mr-2">
+                                <path fill-rule="evenodd" d="M19.952 1.651a.75.75 0 0 1 .298.599V16.303a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.403-4.909l2.311-.66a1.5 1.5 0 0 0 1.088-1.442V6.994l-9 2.572v9.737a3 3 0 0 1-2.176 2.884l-1.32.377a2.553 2.553 0 1 1-1.402-4.909l2.31-.66a1.5 1.5 0 0 0 1.088-1.442V5.25a.75.75 0 0 1 .544-.721l10.5-3a.75.75 0 0 1 .658.122Z" clip-rule="evenodd" />
+                            </svg>`;
+                    } else if (["pdf", "doc", "docx", "txt"].includes(extension)) {
+                        // Document file icon
+                        iconSVG = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                            <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625Z" />
+                            <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                            </svg>
+                            `;
+                    } else {
+                        // Default fallback icon (document)
+                        iconSVG = `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                            <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625Z" />
+                            <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                            </svg>
+                        `;
+                    }
+                }
+
+                // Add the SVG and entry name
+                entryElement.innerHTML = `${iconSVG}<span class="ml-2">${entry.name}</span>`;
+                let relativePath = `${currentPath === "/" ? "" : currentPath}/${entry.name}` 
+
+                // If the entry is a folder, make it clickable
+                if (entry.type == "dir") {
+                    entryElement.addEventListener("dblclick", () => {
+                        navigationPath.push(relativePath);
+                        //alert(`You clicked on ${relativePath}`);
+                        hideActionButtons();
+                        updateView(); // Refresh view
+                    });
+                }
+
+                entryElement.addEventListener("click", () => {
+                   const previouslySelected = document.querySelector(".selected-entry");
+                    if (previouslySelected) {
+                        previouslySelected.classList.remove("border", "border-blue-500", "bg-blue-100", "selected-entry");
+                    }    
+                    entryElement.classList.add("border", "border-blue-500", "bg-blue-100", "selected-entry");
+                    // Set the active file path
+
+                    createActionButtons(relativePath, entry.type === "file");
+                    showActionButtons();
+                });
+
+
+                folderContentsDiv.appendChild(entryElement);
+            });
+        }
+
+
+        document.getElementById("new-folder-btn").addEventListener("click", () => {
+            // Get the current path
+            const currentPath = navigationPath[navigationPath.length - 1];
+
+            // Ask the user for the new folder name
+            const folderName = prompt("Enter the name of the new folder:");
+            if (!folderName) {
+                alert("Folder name is required.");
+                return;
+            }
+
+            // Prepare the POST request payload
+            const payload = {
+                path: currentPath,
+                foldername: folderName
+            };
+
+            // Send the POST request
+            fetch("/create_folder", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                // Log the response status for debugging
+                console.log("Response status:", response.status);
+
+                if (response.ok) {
+                    console.log("Folder created successfully.");
+                    alert(`Folder "${folderName}" created successfully at ${currentPath}`);
+                    // Refresh or update the view if necessary
+                    updateView();
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error creating folder:", error);
+                alert("Failed to create folder. Please try again.");
+            });
+        });
+
+        // Initialize the view
+        updateView();
+
+        document.getElementById("back-btn").addEventListener("click", () => {
+            // Navigate to the root URL "/"
+            window.location.href = "/";
+        });
+
+
+    </script>
+</body>
+</html>

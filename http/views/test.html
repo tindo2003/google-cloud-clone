@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Tables</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .pagination-button {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            background-color: #4a5568;
+            color: white;
+            border-radius: 0.25rem;
+        }
+        .pagination-button:hover {
+            background-color: #2d3748;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto py-8">
+        <h1 class="text-2xl font-bold mb-6">Node Tables</h1>
+
+        <div id="tables-container">
+            <!-- Tables will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        const kvs_each_node = {
+            "Node1": {
+                "username#account": [
+                    { key: "user1", value: "value1" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" },
+                    { key: "user2", value: "value2" }
+                    // Add more rows as needed
+                ],
+                "username#storage": [
+                    { key: "storage1", value: "value3" },
+                    { key: "storage2", value: "value4" },
+                    // Add more rows as needed
+                ]
+            },
+            "Node2": {
+                "username#account": [
+                    { key: "user3", value: "value5" },
+                    { key: "user4", value: "value6" },
+                    // Add more rows as needed
+                ]
+            }
+        };
+
+        function createTable(data, tableId) {
+            const table = document.createElement('table');
+            table.classList.add('table-auto', 'border-collapse', 'border', 'border-gray-400', 'w-full', 'mb-8');
+            table.id = `table-${tableId}`;
+
+            // Create header row
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `
+                <th class="border border-gray-400 px-4 py-2">Key</th>
+                <th class="border border-gray-400 px-4 py-2">Value</th>
+            `;
+            table.appendChild(headerRow);
+
+            // Create data rows
+            data.forEach((row, index) => {
+                const dataRow = document.createElement('tr');
+                dataRow.classList.add(`page-${Math.floor(index / 10)}`);
+                if (index >= 10) dataRow.classList.add('hidden');
+
+                dataRow.innerHTML = `
+                    <td class="border border-gray-400 px-4 py-2">${row.key}</td>
+                    <td class="border border-gray-400 px-4 py-2">${row.value}</td>
+                `;
+                table.appendChild(dataRow);
+            });
+
+            // Create pagination
+            const paginationContainer = document.createElement('div');
+            paginationContainer.classList.add('flex', 'justify-center', 'mt-4');
+
+            const totalPages = Math.ceil(data.length / 10);
+            for (let i = 0; i < totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i + 1;
+                button.classList.add('pagination-button');
+                console.log(tableId)
+                console.log(i)
+                button.addEventListener('click', () => {
+                    let my_str = `#table-${tableId} .page-${i}`; 
+                    console.log(my_str);
+                    document.querySelectorAll(my_str).forEach(row => row.classList.remove('hidden'));
+                    document.querySelectorAll(`#table-${tableId} tr:not(.page-${i})`).forEach(row => row.classList.add('hidden'));
+                });
+                paginationContainer.appendChild(button);
+            }
+
+            return { table, paginationContainer };
+        }
+
+
+        function removeAndAddPage(tableId, page_num) {
+            
+            document.querySelectorAll(my_str).forEach(row => row.classList.remove('hidden'));
+            document.querySelectorAll(`#table-${tableId} tr:not(.page-${i})`).forEach(row => row.classList.add('hidden')); 
+        }
+        
+
+        function renderTables(kvsData) {
+            const container = document.getElementById('tables-container');
+            Object.keys(kvsData).forEach(node => {
+                const nodeHeader = document.createElement('h2');
+                nodeHeader.textContent = node;
+                nodeHeader.classList.add('text-xl', 'font-semibold', 'mb-4');
+                container.appendChild(nodeHeader);
+
+                Object.keys(kvsData[node]).forEach(tableName => {
+                    const tableHeader = document.createElement('h3');
+                    tableHeader.textContent = tableName;
+                    tableHeader.classList.add('text-lg', 'font-medium', 'mb-2');
+                    container.appendChild(tableHeader);
+
+                    const { table, paginationContainer } = createTable(kvsData[node][tableName], `${node}-${tableName}`);
+                    container.appendChild(table);
+                    container.appendChild(paginationContainer);
+                });
+            });
+        }
+
+        renderTables(kvs_each_node);
+        console.log("hola", document.querySelectorAll("#table-Node1-username#account"));
+    </script>
+</body>
+</html>

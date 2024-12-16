@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Interface</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="font-sans">
+        <div class="flex">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white h-screen shadow-lg flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b">
+                <a href="/email" class="text-xl font-bold text-gray-700 hover:underline">
+                    <h1>Email</h1>
+                </a>
+            </div>
+
+            <!-- Buttons -->
+            <div class="p-4 flex-1">
+                <button id="compose-button" class="flex items-center px-4 py-2 mb-4 text-blue-700 rounded-lg hover:bg-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                    </svg>
+                <span>Compose</span>
+                </button >
+                <button id="inbox-button" class="w-full flex items-center px-4 py-2 mb-4 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H6.911a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661Z" />
+                    </svg>
+                <span>Inbox</span>
+                </button >
+                <button id="sent-button" class="w-full flex items-center px-4 py-2 mb-4 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                    </svg>
+                <span>Sent</span>
+                </button>
+            </div>
+            </div>
+
+            <!-- Main Content -->
+            <div id="main-content" class="flex-1 p-6">
+                <h1 class="text-2xl font-bold mb-4">Welcome to Your Email Interface</h1>
+                <p>Select an option from the sidebar.</p>
+            </div>
+        </div>
+
+
+        <!-- COMPOSE SECTION -->
+        <div id="compose-modal" class="hidden fixed bottom-5 right-5 w-full max-w-md bg-white shadow-lg rounded-lg p-4">
+            <!-- Close Button -->
+            <button id="close-button" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
+                &times;
+            </button>
+
+            <!-- To Field with Chips -->
+            <label class="block text-sm font-semibold text-gray-700 mb-1">To</label>
+            <div id="chip-container" class="flex flex-wrap items-center border border-gray-300 rounded p-2 mb-4">
+                <input id="email-input" type="text" placeholder="Type an email and press Enter" class="flex-grow outline-none p-1 text-sm" />
+            </div>
+
+            <!-- Subject Field -->
+            <input type="text" id="subject-input" placeholder="Subject" class="w-full p-2 border-b border-gray-300 focus:outline-none mb-4" />
+
+            <!-- Message Body -->
+            <textarea id="message-input" placeholder="Message" rows="6" class="w-full p-2 border border-gray-300 rounded focus:outline-none resize-none mb-4"></textarea>
+
+            <!-- Send Button -->
+            <button id="send-button" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Send</button>
+        </div>
+
+        <script>
+            const composeButton = document.getElementById("compose-button");
+            const composeModal = document.getElementById("compose-modal");
+            const emailInput = document.getElementById("email-input");
+            const chipContainer = document.getElementById("chip-container");
+            const sendButton = document.getElementById("send-button");
+            const closeButton = document.getElementById("close-button");
+            const mainContent = document.getElementById("main-content");
+            const inboxButton = document.getElementById("inbox-button");
+            const sentButton = document.getElementById("sent-button"); 
+
+            // Show the compose modal when the Compose button is clicked
+            composeButton.addEventListener("click", () => {
+            composeModal.classList.remove("hidden");
+            });
+
+            // Close the compose modal when the Close button is clicked
+            closeButton.addEventListener("click", () => {
+                composeModal.classList.add("hidden");
+            });
+
+            // Add event listener for the Enter key
+            emailInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && emailInput.value.trim() !== "") {
+                event.preventDefault();
+                addEmailChip(emailInput.value.trim());
+                emailInput.value = "";
+            }
+            });
+
+            // Function to create an email chip
+            function addEmailChip(email) {
+                const chip = document.createElement("div");
+                chip.className =
+                    "flex items-center bg-gray-200 text-gray-700 rounded-full px-3 py-1 mr-2 mb-2";
+
+                const initial = document.createElement("span");
+                initial.className =
+                    "bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-semibold mr-2";
+                initial.innerText = email[0].toLowerCase();
+
+                const emailText = document.createElement("span");
+                emailText.innerText = email;
+                emailText.className = "text-sm";
+
+                const removeButton = document.createElement("button");
+                removeButton.className =
+                    "ml-2 text-gray-500 hover:text-gray-700 focus:outline-none";
+                removeButton.innerHTML = "&times;";
+                removeButton.onclick = function () {
+                    chipContainer.removeChild(chip);
+                };
+
+                chip.appendChild(initial);
+                chip.appendChild(emailText);
+                chip.appendChild(removeButton);
+                chipContainer.insertBefore(chip, emailInput);
+            }
+
+            // Handle the send button
+            sendButton.addEventListener("click", async function () {
+                // Collect email addresses from chips
+                const emailChips = chipContainer.querySelectorAll("div");
+                const emailAddresses = Array.from(emailChips).map(
+                (chip) => chip.querySelector("span:nth-child(2)").innerText
+                );
+
+                // Collect subject and message content
+                const subject = document.getElementById("subject-input").value.trim();
+                const message = document.getElementById("message-input").value.trim();
+
+
+                // Validate inputs (ensure required fields are not empty)
+                if (emailAddresses.length === 0 || !subject || !message) {
+                    console.error("All fields must be filled out before sending.");
+                    alert("Please complete all fields before sending the email.");
+                    return;
+                }
+
+                // Send a POST request for each email address
+                for (const recipient of emailAddresses) {
+                    let my_cookies = parseCookies();
+                    const payload = {
+                        recipient: recipient,
+                        sender: my_cookies["user"], // Replace with the sender's email address
+                        subject: subject,
+                        timestamp: generateTimestamp(),
+                        message: message,
+                    };
+
+                    try {
+                        const response = await fetch("/send_email", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(payload),
+                        });
+
+                        if (response.ok) {
+                            console.log(`Email sent to ${recipient} successfully.`);
+                        } else {
+                            console.error(`Failed to send email to ${recipient}.`, response.statusText);
+                        }
+                    } catch (error) {
+                        console.error(`Error sending email to ${recipient}:`, error);
+                    }
+                }
+
+                // Log the collected data (you can replace this with further processing)
+                console.log("To:", emailAddresses);
+                console.log("Subject:", subject);
+                console.log("Message:", message);
+
+
+                document.getElementById("subject-input").value = ""; // Clear subject field
+                document.getElementById("message-input").value = ""; // Clear message field
+                emailInput.value = ""; // Clear email input field
+                // Remove all chips from the chip container except the input field
+                const chips = chipContainer.querySelectorAll("div");
+                chips.forEach((chip) => chipContainer.removeChild(chip));
+                composeModal.classList.add("hidden");
+            });
+
+
+
+            let incoming_emails = [];
+
+            let outgoing_emails = [];
+
+
+
+            // Function to render the emails
+            function renderEmails(type) {
+                if (type == "sent") {
+                    emailList = outgoing_emails;
+                } else {
+                    emailList = incoming_emails;
+                }
+                // Clear the main content area
+                mainContent.innerHTML = "";
+
+                // Create a heading for the Inbox
+                const heading = document.createElement("h1");
+                heading.className = "text-2xl font-bold mb-4";
+                if (type == "sent") {
+                   heading.textContent = "Sent";  
+                } else {
+                   heading.textContent = "Inbox"; 
+                }
+                mainContent.appendChild(heading);
+
+                // Create a list to display email previews
+                const emailListContainer = document.createElement("ul");
+                emailListContainer.className = "space-y-2";
+
+                // Loop through the email list and create list items
+                emailList.forEach((email, index) => {
+                    const listItem = document.createElement("li");
+                    console.log("in loop. my current email is ", email)
+                    listItem.className =
+                        "flex justify-between items-center border-b pb-2 cursor-pointer hover:bg-gray-100 hover:shadow-md px-2 py-2 transition duration-200";
+                    listItem.setAttribute("data-index", index); // Save email index for lookup
+
+                    const leftPart = document.createElement("div");
+                    leftPart.className = "flex-1";
+
+                    const sender = document.createElement("span");
+                    sender.className = "font-semibold mr-4 text-gray-700";
+                    sender.textContent = email.target;
+
+                    const subject = document.createElement("span");
+                    subject.className = "text-gray-600 truncate";
+                    subject.textContent = email.subject.length > 40 ? email.subject.slice(0, 40) + "..." : email.subject;
+
+                    leftPart.appendChild(sender);
+                    leftPart.appendChild(subject);
+
+                    const time = document.createElement("span");
+                    time.className = "text-gray-400 text-sm flex-shrink-0";
+                    time.textContent = email.timestamp;
+
+                    listItem.appendChild(leftPart);
+                    listItem.appendChild(time);
+                    emailListContainer.appendChild(listItem);
+
+                    // Add click event listener to show email details
+                    listItem.addEventListener("click", () => {
+                        renderEmailContent(email, type);
+                    });
+                });
+
+                // Append the list to the main content area
+                mainContent.appendChild(emailListContainer);
+            }
+
+
+
+          async function renderEmailContent(preview_email, type) {
+            if (type == "sent") {
+                emailList = outgoing_emails;
+            } else {
+               emailList = incoming_emails; 
+            }
+
+            let email = await fetchSingleEmail(preview_email.uuid, preview_email.target, preview_email.subject);
+
+            const backDelteButtonContainer = document.createElement("div");
+            backDelteButtonContainer.className = "flex space-x-4 mt-4 mb-4"; 
+
+            // Clear the main content area
+            mainContent.innerHTML = "";
+
+            // Render email subject
+            const subject = document.createElement("h1");
+            subject.className = "text-2xl font-bold mb-4";
+            subject.textContent = email.subject;
+
+            // Render target (To)
+            const to = document.createElement("p");
+            to.className = "text-gray-500 mb-4";
+            to.textContent = `To: ${email.target}`;
+
+            // Back to Inbox Button
+            const backButton = document.createElement("button");
+            backButton.className = "flex items-center justify-center border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 px-6 py-2";
+            backButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                Back to Inbox
+            `;
+            backButton.addEventListener("click", () => {
+                renderEmails(type); // Go back to the list of emails
+            });
+
+            
+            const deleteButton = document.createElement("button");
+            deleteButton.className = "flex items-center justify-center border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 px-6 py-2";
+            deleteButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+                Delete
+            `;
+
+            deleteButton.addEventListener("click", async () => {
+                await deleteEmail(type, preview_email.uuid);
+                await getEmailPreviews(type);
+                renderEmails(type); 
+            });
+
+
+            // Append the back button and subject to main content
+            backDelteButtonContainer.appendChild(backButton);
+            backDelteButtonContainer.appendChild(deleteButton);
+
+            // Append the container to the main content
+            mainContent.appendChild(backDelteButtonContainer);
+            
+            mainContent.appendChild(subject);
+            mainContent.appendChild(to);
+
+            // Render the initial message (first element)
+            const initialMessage = email.message[0];
+            const initialMessageContainer = document.createElement("div");
+            initialMessageContainer.className = "border border-gray-300 rounded-md p-4 mb-4 bg-white shadow-md";
+
+            const initialSender = document.createElement("p");
+            initialSender.className = "text-gray-600 font-medium";
+            initialSender.textContent = `From: ${initialMessage.sender}`;
+
+            const initialRecipient = document.createElement("p");
+            initialRecipient.className = "text-gray-600";
+            initialRecipient.textContent = `To: ${initialMessage.recipient}`;
+
+            const initialTimestamp = document.createElement("p");
+            initialTimestamp.className = "text-gray-400 text-sm mb-2";
+            initialTimestamp.textContent = `Sent: ${initialMessage.timestamp}`;
+
+            const initialContent = document.createElement("pre");
+            initialContent.className = "text-gray-700";
+            
+            initialContent.textContent = initialMessage.message;
+
+            initialMessageContainer.appendChild(initialSender);
+            initialMessageContainer.appendChild(initialRecipient);
+            initialMessageContainer.appendChild(initialTimestamp);
+            initialMessageContainer.appendChild(initialContent);
+
+            mainContent.appendChild(initialMessageContainer);
+
+            // Render the rest of the thread (subsequent elements)
+            const threadMessages = email.message.slice(1); // Exclude the first message
+            threadMessages.forEach((msg) => {
+                const messageContainer = document.createElement("div");
+                messageContainer.className = "border border-gray-300 rounded-md p-4 mb-4 bg-white shadow-sm";
+
+                const sender = document.createElement("p");
+                sender.className = "text-gray-600 font-medium";
+                sender.textContent = `From: ${msg.sender}`;
+
+                const recipient = document.createElement("p");
+                recipient.className = "text-gray-600";
+                recipient.textContent = `To: ${msg.recipient}`;
+
+                const timestamp = document.createElement("p");
+                timestamp.className = "text-gray-400 text-sm mb-2";
+                timestamp.textContent = `Sent: ${msg.timestamp}`;
+
+                const messageContent = document.createElement("p");
+                messageContent.className = "text-gray-700";
+                messageContent.textContent = msg.message;
+
+                messageContainer.appendChild(sender);
+                messageContainer.appendChild(recipient);
+                messageContainer.appendChild(timestamp);
+                messageContainer.appendChild(messageContent);
+
+                mainContent.appendChild(messageContainer);
+            });
+            
+            const replyForwardContainer = document.createElement("div");
+            replyForwardContainer.className = "flex space-x-4 mt-4"; 
+
+            const replyButton = document.createElement("button");
+                replyButton.className = "flex items-center px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 mr-2";
+                replyButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.49 12 3.74 8.248m0 0 3.75-3.75m-3.75 3.75h16.5V19.5" />
+                    </svg>
+                    Reply
+                `;
+
+            replyButton.addEventListener("click", () => {
+                // Check if the reply box already exists
+                if (document.getElementById("reply-box")) {
+                    console.log("Reply box already open.");
+                    return;
+                }
+
+                // Create a reply box container
+                const replyBox = document.createElement("div");
+                replyBox.id = "reply-box";
+                replyBox.className = "mt-4 p-4 border border-gray-300 rounded-md bg-gray-50";
+
+                // Create a text area for the reply message
+                const replyTextArea = document.createElement("textarea");
+                replyTextArea.id = "reply-text";
+                replyTextArea.className = "w-full p-2 border border-gray-300 rounded-md";
+                replyTextArea.rows = 4;
+                replyTextArea.placeholder = "Write your reply here...";
+
+                // Create a send button
+                const sendButton = document.createElement("button");
+                sendButton.className = "mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600";
+                sendButton.textContent = "Send";
+
+                // Add an event listener for the send button
+                sendButton.addEventListener("click", async () => {
+                    const replyContent = replyTextArea.value.trim();
+                    if (!replyContent) {
+                        alert("Reply cannot be empty.");
+                        return;
+                    }
+
+                    // Add your send reply logic here
+                    console.log("Replying with content:", replyContent);
+
+                    // Example usage of `sendEmailReply` function
+                    const my_cookies = parseCookies();
+                    console.log(my_cookies);
+                    await sendEmailReply(email.uuid, my_cookies["user"], email.message, replyContent, email.subject);
+
+                    // Remove the reply box after sending
+                    replyBox.remove();
+                    alert("Reply sent successfully!");
+                });
+
+                // Create a close button
+                const closeButton = document.createElement("button");
+                closeButton.className = "mt-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 ml-2";
+                closeButton.textContent = "Close";
+
+                // Add an event listener to the close button
+                closeButton.addEventListener("click", () => {
+                    replyBox.remove(); // Remove the reply box
+                    console.log("Reply box closed.");
+                });
+
+                // Append the text area and send button to the reply box
+                replyBox.appendChild(replyTextArea);
+                replyBox.appendChild(sendButton);
+                replyBox.appendChild(closeButton);
+
+
+                // Append the reply box to the main content area
+                mainContent.appendChild(replyBox);
+            });
+
+            // forward button
+            const forwardButton = document.createElement("button");
+            forwardButton.className = "flex items-center px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100";
+            forwardButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.49 12 3.75-3.751m0 0-3.75-3.75m3.75 3.75H3.74V19.5" />
+                </svg>
+                Forward
+            `;
+
+            forwardButton.addEventListener("click", () => {
+                alert("Forwarding this email...");
+
+                // Create a container for the forward box
+                const forwardBox = document.createElement("div");
+                forwardBox.className = "border border-gray-300 p-4 rounded-md mt-4";
+
+                // Create a text area for the forward message
+                const forwardTextArea = document.createElement("textarea");
+                forwardTextArea.className = "w-full p-2 border border-gray-300 rounded-md mb-2";
+                forwardTextArea.rows = 4;
+                forwardTextArea.placeholder = "Add a message when forwarding...";
+
+                // Pre-fill the text area with the formatted forwarded message
+                const forwardedContent = `<<This email forwarded from ${email.target}>>\n\n${email.message.map(msg => 
+                    `From: ${msg.sender}\nTo: ${msg.recipient}\nTime: ${msg.timestamp}\nMessage: ${msg.message}\n`
+                ).join("\n")}`;
+
+
+                forwardTextArea.value = forwardedContent;
+
+                // Create a send button
+                const sendButton = document.createElement("button");
+                sendButton.className = "mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600";
+                sendButton.textContent = "Send Forward";
+
+                // Add an event listener to the send button
+                sendButton.addEventListener("click", async () => {
+                    const forwardContent = forwardTextArea.value.trim();
+
+                    // Validation
+                    if (forwardContent === "") {
+                        alert("Forward content cannot be empty.");
+                        return;
+                    }
+
+                    console.log("Forwarding with content:", forwardContent);
+
+                    my_cookies = parseCookies();
+                    console.log(my_cookies);
+
+                    let last_email_obj = email.message[email.message.length - 1]; 
+
+                    await forwardEmail({
+                        recipient: prompt("Enter recipient email:"), // Ask for recipient email
+                        sender: my_cookies["user"],
+                        originalMessage: forwardContent,
+                        subject: `Fwd: ${email.subject}`,
+                        origSender: last_email_obj.sender
+                    });
+
+                    // Remove the forward box after sending
+                    forwardBox.remove();
+                    alert("Email forwarded successfully!");
+                });
+
+                // Create a close button
+                const closeButton = document.createElement("button");
+                closeButton.className = "mt-2 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 ml-2";
+                closeButton.textContent = "Close";
+
+                // Add an event listener to the close button
+                closeButton.addEventListener("click", () => {
+                    forwardBox.remove(); // Remove the forward box
+                    console.log("Forward box closed.");
+                });
+
+                // Append the text area, send button, and close button to the forward box
+                forwardBox.appendChild(forwardTextArea);
+                forwardBox.appendChild(sendButton);
+                forwardBox.appendChild(closeButton);
+
+                // Append the forward box to the main content area
+                mainContent.appendChild(forwardBox);
+            });
+
+
+
+            replyForwardContainer.appendChild(replyButton);
+            replyForwardContainer.appendChild(forwardButton);
+            mainContent.appendChild(replyForwardContainer);
+        }
+
+
+            // Event listener to render emails when "Inbox" is clicked
+            inboxButton.addEventListener("click", async () => {
+                await getEmailPreviews("inbox");
+                renderEmails("inbox");
+            });
+
+            sentButton.addEventListener("click", async () => {
+                await getEmailPreviews("sent");
+                renderEmails("sent");
+            });
+
+
+            function generateTimestamp() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
+                const date = now.getDate().toString().padStart(2, '0');
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+
+                return `${year}-${month}-${date} ${hours}:${minutes}`;
+            }
+
+
+            async function getEmailPreviews(mailboxType) {
+                // Validate the mailbox type argument
+                if (mailboxType !== "inbox" && mailboxType !== "sent") {
+                    console.error("Invalid mailbox type. Use 'inbox' or 'sent'.");
+                    return;
+                }
+
+                // Construct the URL with the query parameter
+                const url = `/box?type=${mailboxType}`;
+
+                try {
+                    // Send the GET request
+                    const response = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    // Check if the response is okay
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // Parse the JSON response
+                    const emails = await response.json();
+
+                    if (mailboxType == "sent") {
+                        outgoing_emails = emails; 
+                    } else {
+                        incoming_emails = emails;
+                    }
+
+                    // Log or process the list of emails
+                    console.log(`${mailboxType.toUpperCase()} Emails:`, emails);
+
+                    // Return the emails for further processing if needed
+                    //return emails;
+                } catch (error) {
+                    console.error(`Failed to fetch ${mailboxType} emails:`, error);
+                }
+            }
+
+
+            async function fetchSingleEmail(uuid, target, subject) {
+                // Validate input arguments
+                if (!uuid || !target || !subject) {
+                    console.error("All query parameters (uuid, target, subject) are required.");
+                    return;
+                }
+
+                // Construct the URL with query parameters
+                const url = `/single_email?uuid=${encodeURIComponent(uuid)}&target=${encodeURIComponent(target)}&subject=${encodeURIComponent(subject)}`;
+
+                try {
+                    // Send the GET request
+                    const response = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    // Check if the response is successful
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    console.log("edmund", response);
+
+                    // Parse the JSON response
+                    const emailDetails = await response.json();
+
+                    // Log the response for debugging
+                    console.log("Fetched Email Details:", emailDetails);
+
+                    // Return the email details for further processing
+                    return emailDetails;
+                } catch (error) {
+                    console.error("Failed to fetch the email:", error);
+                }
+            }
+
+
+            async function sendEmailReply(threadUuid, sender, messageThread, replyContent, email_subject) {
+                console.log("uuid", threadUuid, "sender", sender, "messagethread", messageThread, "replyContent", replyContent);
+                // Validate inputs
+                if (!threadUuid || !sender || !messageThread || !replyContent) {
+                    console.error("All required parameters (threadUuid, sender, messageThread, replyContent) must be provided.");
+                    return;
+                }
+
+                // Extract the recipient from the last message in the thread
+                const recipient = messageThread[messageThread.length - 1]?.sender;
+
+                if (!recipient) {
+                    console.error("Unable to determine recipient from the message thread.");
+                    return;
+                }
+
+                // Generate the timestamp for the reply
+                const timestamp = generateTimestamp();
+
+                // Add the new reply to the message thread
+                const newMessage = {
+                    message: replyContent,
+                    recipient: recipient,
+                    sender: sender,
+                    timestamp: timestamp,
+                };
+                const updatedMessageThread = [...messageThread, newMessage];
+
+                // Construct the request body
+                const requestBody = {
+                    recipient: recipient,
+                    sender: sender,
+                    timestamp: timestamp,
+                    uuid: threadUuid,
+                    message: updatedMessageThread,
+                    subject: email_subject
+                };
+
+                try {
+                    // Send the POST request to the /email_reply endpoint
+                    const response = await fetch("/email_reply", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(requestBody),
+                    });
+
+                    // Handle the response
+                    if (response.ok) {
+                        console.log("Reply sent successfully!");
+                    } else {
+                        console.error("Failed to send reply:", response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Error sending email reply:", error);
+                }
+            }
+
+
+            function parseCookies() {
+                const cookieObj = {};
+                const cookies = document.cookie.split("; ");
+
+                cookies.forEach(cookie => {
+                    const [key, value] = cookie.split("=");
+                    cookieObj[key] = decodeURIComponent(value); // Decode to handle special characters
+                });
+
+                return cookieObj;
+            }
+
+            async function deleteEmail(type, uuid) {
+                // Validate input parameters
+                if (!type || !uuid) {
+                    console.error("Both 'type' and 'uuid' parameters are required.");
+                    return;
+                }
+
+                if (type !== "sent" && type !== "inbox") {
+                    console.error("Invalid 'type' parameter. Must be 'sent' or 'inbox'.");
+                    return;
+                }
+
+                // Construct the URL with query parameters
+                const url = `/send_email?type=${encodeURIComponent(type)}&uuid=${encodeURIComponent(uuid)}`;
+
+                try {
+                    // Send the DELETE request
+                    const response = await fetch(url, {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    // Handle response
+                    if (response.ok) {
+                        console.log(`Email with UUID: ${uuid} successfully deleted from ${type} box.`);
+                        alert("Email deleted successfully!");
+                    } else {
+                        throw new Error(`Failed to delete email. Status: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error("Error deleting email:", error);
+                    alert("Failed to delete the email. Please try again.");
+                }
+            }
+
+            // Function to forward an email
+            async function forwardEmail({ recipient, sender, originalMessage, subject, origSender }) {
+                console.log("recipient", recipient, "sender", sender, "originMsg", originalMessage, "subject", subject, "originSender", origSender);
+                if (!recipient || !sender || !originalMessage || !subject || !origSender) {
+                    console.error("All parameters (recipient, sender, originalMessage, subject, orig) are required.");
+                    return;
+                }
+
+                // Construct the POST request payload
+                const payload = {
+                    recipient: recipient,
+                    sender: sender,
+                    timestamp: generateTimestamp(),
+                    message: originalMessage,
+                    subject: subject,
+                    orig: origSender
+                };
+
+                try {
+                    const response = await fetch("/email_forward", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(payload),
+                    });
+
+                    // Handle response
+                    if (response.ok) {
+                        console.log("Email successfully forwarded.");
+                        alert("Email forwarded successfully!");
+                    } else {
+                        throw new Error(`Failed to forward email. Status: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error("Error forwarding email:", error);
+                    alert("Failed to forward the email. Please try again.");
+                }
+            }
+
+        </script>
+
+
+    </body>
+</html>
+
+
+

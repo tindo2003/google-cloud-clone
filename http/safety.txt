@@ -1,0 +1,41 @@
+else if (request.method == "POST" && request.path == "/send_email") {
+      // request.body
+
+      cout << request.body << endl;
+      json res = nlohmann::json::parse(request.body);
+
+      // dummy: user = edmund
+      std::string metadata = res["subject"].get<std::string>() + ";" + res["recipient"].get<std::string>() + ";" + res["timestamp"].get<std::string>();
+
+      std::string uuid = compute_UUID(metadata);
+      std::string the_box = "sent";
+      // put in our mailbox
+      cout << "The sender of our email is: " << res["sender"].get<std::string>() << endl;
+      bool win = put_mailbox(res["sender"].get<std::string>(), the_box, metadata, uuid, res["message"], email_status_code);
+
+      // put in their mailbox
+      the_box = "inbox";
+      std::string their_metadata = res["subject"].get<std::string>() + ";" + res["sender"].get<std::string>() + ";" + res["timestamp"].get<std::string>();
+
+      
+      bool win_put = put_mailbox(res["recipient"].get<std::string>(), the_box, their_metadata, uuid, res["message"], email_status_code);
+
+      // send response, which is HTML code
+      if (win && win_put) {
+        response_body = strdup("<html><body><h1>Email sent successfully.</h1></body></html>");
+        send_response(client_sockfd, email_status_code, content_type, response_body);         
+      } else {
+        email_status_code = "400 Bad Request";
+        response_body = "<html><body><h1>Error: Bad Request.</h1></body></html>";
+        send_response(client_sockfd, email_status_code, content_type, response_body);   
+      }
+    }
+
+
+
+
+
+
+
+
+
